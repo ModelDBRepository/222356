@@ -1,0 +1,47 @@
+breath_period=100 // 66+2/3
+breathing_period = breath_period
+light_period=breath_period - breath_period/1600 // 400 //
+breath_zero_time=0
+/// below write_vec is from load_file("graph_fncs.hoc")
+
+strdef tmpstr
+objref tmpfile
+tmpfile = new File()
+proc write_vec() { // $s1 is filename, $o2 is vector to write
+  tmpstr = $s1
+  print "In write_vec here comes pwd and ls"
+  ///system("pwd")
+  ///system("ls")
+  tmpfile.wopen(tmpstr)
+  for i=0, $o2.size()-1 {
+    tmpfile.printf("%g\n",$o2.x[i])
+  }
+  tmpfile.close()
+}
+/// end exceerpt from write_vec
+
+objref t_vec
+ tstop=breathing_period*((breathing_period)/abs(breathing_period-light_period))+100
+// new tstop method: include at least 400 breath cycles regardless of breath_period
+//tstop = 400*breathing_period+100 // 
+
+t_vec = new Vector()
+t_vec.indgen(0, tstop, dt)
+
+objref BRTH_data, fs_vec, ts_vec, sortcode_vec, SOFF_vec, S_ON_vec, S_ON_data_vec
+strdef tmpfilename, tank_folder // used by NSG to find run_X/tdt2mat_data for each simulation
+
+// comment in when want the big breath trace otherwise use shared breath trace to save space
+BRTH_data=t_vec.c.sin(1/(breath_period/1000),PI/2-2*PI*breath_zero_time/breath_period, dt) // freq in Hz
+  // uncomment the below if want to write the big file:
+// for fake breath trace BRTH_data=t_vec.append(0) // store one number just to make a file
+// BRTH_data.c.mul(20).line(v_graph,t_vec,5,1)
+// /Users/morse/Documents/projects/VerhagenLab/from_NSG/20151009/
+// 15cycle15HWgc30	5cycle15HWgc30
+// tank_folder="/Users/morse/Documents/projects/VerhagenLab/from_NSG/20151009/15cycle15HWgc30/"
+tank_folder="run_0/tdt2mat_data/"
+sprint(tmpfilename, "%s_d_streams_d_BRTH_d_data.dat", tank_folder) // looks like run_X/tdt2mat_data/_d_...
+  // skip writing these big identical files:
+write_vec(tmpfilename, BRTH_data)
+
+print "wrote the breath trace for approximately ", tstop/breath_period , " breathing cycles in ", tmpfilename
